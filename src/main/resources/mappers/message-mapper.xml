@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bbs.demo.dao.MessageMapper">
+
+    <sql id="selectFields">
+        id, fromid, toid, conversationid, content, status, createtime
+    </sql>
+
+    <sql id="insertFields">
+        fromid, toid, conversationid, content, status, createtime
+    </sql>
+
+    <select id="selectConversations" resultType="Message">
+        select <include refid="selectFields"></include>
+        from message
+        where id in (
+            select max(id) from message
+            where status != 2
+            and fromid != 1
+            and (fromid = #{userId} or toid = #{userId})
+            group by conversationid
+        )
+        order by id desc
+        limit #{offset}, #{limit}
+    </select>
+
+    <select id="selectConversationCount" resultType="int">
+        select count(m.maxid) from (
+            select max(id) as maxid from message
+            where status != 2
+            and fromid != 1
+            and (fromid = #{userId} or toid = #{userId})
+            group by conversationid
+        ) as m
+    </select>
+
+    <select id="selectLetters" resultType="Message">
+        select <include refid="selectFields"></include>
+        from message
+        where status != 2
+        and fromid != 1
+        and conversationid = #{conversationId}
+        order by id desc
+        limit #{offset}, #{limit}
+    </select>
+
+    <select id="selectLetterCount" resultType="int">
+        select count(id)
+        from message
+        where status != 2
+        and fromid != 1
+        and conversationid = #{conversationId}
+    </select>
+
+    <select id="selectLetterUnreadCount" resultType="int">
+        select count(id)
+        from message
+        where status = 0
+        and fromid != 1
+        and toid = #{userId}
+        <if test="conversationId!=null">
+            and conversationid = #{conversationId}
+        </if>
+    </select>
+
+    <insert id="insertMessage" parameterType="Message" keyProperty="id">
+        insert into message(<include refid="insertFields"></include>)
+        values(#{fromId},#{toId},#{conversationId},#{content},#{status},#{createTime})
+    </insert>
+
+    <update id="updateStatus">
+        update message set status = #{status}
+        where id in
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+
+    <select id="selectLatestNotice" resultType="Message">
+        select <include refid="selectFields"></include>
+        from message
+        where id in (
+            select max(id) from message
+            where status != 2
+            and fromid = 1
+            and toid = #{userId}
+            and conversationid = #{topic}
+        )
+    </select>
+
+    <select id="selectNoticeCount" resultType="int">
+        select count(id) from message
+        where status != 2
+        and fromid = 1
+        and toid = #{userId}
+        and conversationid = #{topic}
+    </select>
+
+    <select id="selectNoticeUnreadCount" resultType="int">
+        select count(id) from message
+        where status = 0
+        and fromid = 1
+        and toid = #{userId}
+        <if test="topic!=null">
+            and conversationid = #{topic}
+        </if>
+    </select>
+
+    <select id="selectNotices" resultType="Message">
+        select <include refid="selectFields"></include>
+        from message
+        where status != 2
+        and fromid = 1
+        and toid = #{userId}
+        and conversationid = #{topic}
+        order by createtime desc
+        limit #{offset}, #{limit}
+    </select>
+
+</mapper>
