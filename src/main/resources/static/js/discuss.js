@@ -38,11 +38,13 @@ function setTop() {
 
 // 加精
 function setWonderful() {
+
     $.post(
-        CONTEXT_PATH + "/discuss/wonderful",
+        CONTEXT_PATH + "/discuss/good",
         {"id":$("#postId").val()},
         function(data) {
             data = $.parseJSON(data);
+
             if(data.code == 0) {
                 $("#wonderfulBtn").attr("disabled", "disabled");
             } else {

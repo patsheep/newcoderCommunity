@@ -53,6 +53,11 @@ public interface CommunityConstant {
      * 主题 ：关注
      */
     String TOPIC_FOLLOW="follow";
+    /**
+     * 主题 :通知
+     */
+    String TOPIC_NOTICE="notice";
+
 
     /**
      * 系统用户id

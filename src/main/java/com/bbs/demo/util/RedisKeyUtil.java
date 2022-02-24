@@ -1,6 +1,5 @@
 package com.bbs.demo.util;
 
-import com.bbs.demo.entity.LoginTicket;
 
 public class RedisKeyUtil {
     private static final String SPLIT=":";

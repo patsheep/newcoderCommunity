@@ -88,7 +88,7 @@ public class UserController implements CommunityConstant {
         try {
             File tempFile=File.createTempFile(fileName,suffix);
             headerImage.transferTo(tempFile);
-            ossService.putFile(fileName+suffix,tempFile);
+            ossService.putFile(fileName+suffix,tempFile,"img/");
         } catch (IOException e) {
             e.printStackTrace();
         }

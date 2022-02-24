@@ -3,6 +3,9 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<!--富文本编辑器渲染-->
+	<link rel="stylesheet" th:href="@{editormd/css/editormd.css}" />
+	<link rel="stylesheet" th:href="@{/css/style.css}" />
 	<!--访问该页面的时候，在此处生成CSRF令牌 -->
 	<!--<meta name="_csrf" th:content="${_csrf.token}">
 	<meta name="_csrf_header" th:content="${_csrf.headerName}">-->
@@ -74,7 +77,16 @@
 							<a th:class="|nav-link active ${orderModel==1?'active':''}|" th:href="@{/index(orderModel=1)}">最热</a>
 						</li>
 					</ul>
-					<button type="button" class="btn btn-primary btn-sm position-absolute rt-0" data-toggle="modal" data-target="#publishModal" th:if="${loginUser!=null}">我要发布</button>
+					<div>
+						<button type="button"  data-toggle="modal" data-target="#publishModal" th:if="${loginUser!=null}">我要发布</button>
+
+						<button type="button"  data-toggle="modal" data-target="#NoticeModal" th:if="${loginUser!=null}">通知发布</button>
+					</div>
+					<div>
+						<a   th:href="@{/index(tag='日常灌水')}" >日常灌水</a>
+
+						<a    th:href="@{/index(tag='学习交流')}">学习交流</a>
+					</div>
 				</div>
 				<!-- 弹出框 -->
 				<div class="modal fade" id="publishModal" tabindex="-1" role="dialog" aria-labelledby="publishModalLabel" aria-hidden="true">
@@ -93,14 +105,52 @@
 										<input type="text" class="form-control" id="recipient-name">
 									</div>
 									<div class="form-group">
-										<label for="message-text" class="col-form-label">正文：</label>
-										<textarea class="form-control" id="message-text" rows="15"></textarea>
+										<label for="recipient-name" class="col-form-label">标签：</label>
+										<input type="text" class="form-control" id="content-tag">
+									</div>
+
+
+
+
+
+									<div>正文：</div>
+									<div class="form-group" id="test-editor">
+										<textarea class="editormd-markdown-textarea" id="message-text" name="my-editormd-markdown-doc" style="display:none"></textarea>
 									</div>
 								</form>
 							</div>
 							<div class="modal-footer">
 								<button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
 								<button type="button" class="btn btn-primary" id="publishBtn">发布</button>
+							</div>
+						</div>
+					</div>
+				</div>
+				<!--发通知 -->
+				<div class="modal fade" id="NoticeModal" tabindex="-1" role="dialog" aria-labelledby="publishModalLabel" aria-hidden="true">
+					<div class="modal-dialog modal-lg" role="document">
+						<div class="modal-content">
+							<div class="modal-header">
+								<h5 class="modal-title" id="NoticeModalLabel">通知发布</h5>
+								<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+									<span aria-hidden="true">&times;</span>
+								</button>
+							</div>
+
+							<div class="modal-body">
+								<form>
+
+									<div class="form-group">
+										<label for="message-text" class="col-form-label">正文：</label>
+										<textarea class="form-control" id="notice-text" rows="15"></textarea>
+									</div>
+								</form>
+							</div>
+
+
+							<div class="modal-footer">
+								<button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+								<button type="button" class="btn btn-primary" id="publishNoticeBtn">发布</button>
 							</div>
 						</div>
 					</div>
@@ -120,8 +170,8 @@
 				</div>
 				
 				<!-- 帖子列表 -->
-				<ul class="list-unstyled">
-					<li class="media pb-3 pt-3 mb-3 border-bottom" th:each="map:${discussPosts}">
+				<ul class="list-unstyled" th:fragment="postList">
+					<li class="media pb-3 pt-3 mb-3 border-bottom" th:each="map:${discussPosts}" >
 						<a th:href="@{|/user/profile/${map.user.id}|}">
 							<img th:src="${map.user.headerUrl}" class="mr-4 rounded-circle" alt="用户头像" style="width:50px;height:50px;">
 						</a>
@@ -141,7 +191,9 @@
 							</div>
 						</div>						
 					</li>
+
 				</ul>
+				<div class="load_more" id="load_more" type="button">加载更多</div>
 				<!-- 分页 -->
 				<nav class="mt-5" th:if="${page.rows>0}" th:fragment="pagination">
 					<ul class="pagination justify-content-center">
@@ -231,6 +283,33 @@
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" crossorigin="anonymous"></script>
 	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" crossorigin="anonymous"></script>
 	<script th:src="@{/js/global.js}"></script>
-	<script th:src="@{js/index.js}"></script>
+	<script th:src="@{js/index2.js}"></script>
+
+	<script th:src="@{/editormd/examples/js/jquery.min.js}"></script>
+	<script th:src="@{/editormd/editormd.js}"></script>
+	<script type="text/javascript">
+        $(function() {
+            var editor = editormd("test-editor", {
+                width  : "100%",
+                height : "500",
+                syncScrolling: "single",
+                path   : "editormd/lib/",
+                saveHTMLToTextarea : true,
+                //toolbar :false,
+
+
+                emoji: false,
+                taskList: true,
+                tocm: true,
+                tex:true,
+                flowChart: true,
+
+                //上传图片配置
+                imageUpload : true,
+                imageFormats :["jpg","jpeg","bmp","gif","png"],
+                imageUploadURL :"/demo/imgUpload"
+            });
+        });
+	</script>
 </body>
 </html>

@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONObject;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.DigestUtils;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -33,6 +34,15 @@ public class CommunityUtil {
                 json.put(key,map.get(key));
             }
         }
+        return json.toJSONString();
+    }
+
+    public static String getJSONStringList(int code, String msg, List<?> list){
+        JSONObject json=new JSONObject();
+        json.put("code",code);
+        json.put("msg",msg);
+        json.put("list",list);
+        System.out.println(json.toString());
         return json.toJSONString();
     }
 

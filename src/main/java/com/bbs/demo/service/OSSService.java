@@ -18,8 +18,8 @@ public class OSSService {
     @Value("${oss.bucketName}")
     private String bucketName;
 
-    private final String baseLocate="img/";
-    public  boolean putFile(String fileName,File file){
+    //private final String baseLocate="img/";
+    public  boolean putFile(String fileName,File file,String baseLocate){
 
         OSS ossClient = new OSSClientBuilder().build(endpoint, accessKeyId, accessKeySecret);
 

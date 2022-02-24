@@ -1,6 +1,7 @@
 package com.bbs.demo.controller;
 
 
+import com.alibaba.fastjson.JSONObject;
 import com.bbs.demo.entity.*;
 
 import com.bbs.demo.event.EventProducer;
@@ -16,12 +17,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import java.io.File;
+import java.io.IOException;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Controller
 @RequestMapping("/discuss")
@@ -45,7 +52,19 @@ public class DiscussPostController implements CommunityConstant {
 
     @RequestMapping(path = "/add",method = RequestMethod.POST)
     @ResponseBody//返回json
-    public String addDiscussPost(String title,String content){
+    public String addDiscussPost(String title,String content,String tag){
+        System.out.println(title+" !"+content+" "+tag);
+
+        List<String> lis=new ArrayList<>();
+        Pattern compile=Pattern.compile("!\\[]\\(.*\\)");
+        Matcher matcher=compile.matcher(content);
+        while(matcher.find()){
+            String str=matcher.group();
+            lis.add(str);
+        }
+        for(String st:lis){
+            content=content.replace(st,"["+st.substring(4,st.length()-1)+"]");
+        }
         User user = hostHolder.getUser();
         if (user==null){
             //返回的是json
@@ -56,7 +75,10 @@ public class DiscussPostController implements CommunityConstant {
         post.setTitle(title);
         post.setContent(content);
         post.setCreateTime(new Date());
+        post.setTag(tag);
         discussPostService.addDiscussPost(post);
+        System.out.println("runhere"+post.toString());
+
 
         //触发发帖事件
         Event event=new Event().setTopic(TOPIC_PUBLISH).setUserId(user.getId())
@@ -76,6 +98,7 @@ public class DiscussPostController implements CommunityConstant {
 
     @RequestMapping(path="/detail/{discussPostId}",method = RequestMethod.GET)
     public String getDiscussPost(@PathVariable("discussPostId")int discussPostId, Model model, Page page){
+
         //帖子
         DiscussPost post = discussPostService.findDiscussPostById(discussPostId);
         model.addAttribute("post",post);
@@ -107,6 +130,7 @@ public class DiscussPostController implements CommunityConstant {
                 Map<String,Object> commentVo=new HashMap<>();
                 //评论
                 commentVo.put("comment",comment);
+
                 //作者
                 commentVo.put("user",userService.findUserById(comment.getUserId()));
 
@@ -167,9 +191,10 @@ public class DiscussPostController implements CommunityConstant {
 
 
     //加精
-    @RequestMapping(path="/wonderful",method = RequestMethod.POST)
+    @RequestMapping(path="/good",method = RequestMethod.POST)
     @ResponseBody
     public String setWonderful(int id){
+
         discussPostService.updateStatus(id,1);
         //同步到elasticSearch
         //触发发帖事件
@@ -188,14 +213,68 @@ public class DiscussPostController implements CommunityConstant {
     @RequestMapping(path="/delete",method = RequestMethod.POST)
     @ResponseBody
     public String setDelete(int id){
-        discussPostService.updateType(id,2);
+
+        discussPostService.updateStatus(id,2);
         //同步到elasticSearch
         //触发删帖事件
+
         Event event=new Event().setTopic(TOPIC_DELETE).setUserId(hostHolder.getUser().getId())
                 .setEntityType(ENTITY_TYPE_POST).setEntityId(id);
         eventProducer.fireEvent(event);
+        discussPostService.refreshCache();
 
         return CommunityUtil.getJsonString(0);
 
     }
+    //加载更多
+    @RequestMapping(path="/load_more")
+    public String load_more(Model model, Page page,  HttpServletResponse httpServletResponse,String pageNumb,String tag){
+        System.out.println(pageNumb+" "+tag);
+        Integer numb=Integer.parseInt(pageNumb);
+        page.setCurrent(numb);
+        httpServletResponse.addCookie(new Cookie("pageNum",numb.toString()));
+
+        List<DiscussPost>list = discussPostService.findDiscussPosts(0, page.getOffset(), page.getLimit(), 0,tag.equals("null")?null:tag);
+        List<Map<String,Object>> discussPosts=new ArrayList<>();
+
+
+
+/*        if(list!=null){
+            for(DiscussPost post:list){
+
+                Map<String,Object> map=new HashMap<>();
+                map.put("post",post);
+                User user = userService.findUserById(post.getUserId());
+
+                map.put("user",user);
+
+                long likeCount = likeService.findEntityLikeCount(ENTITY_TYPE_POST, post.getId());
+                map.put("likeCount",likeCount);
+                discussPosts.add(map);
+            }
+        }*/
+
+        if(list!=null){
+            for(DiscussPost post:list){
+
+                Map<String,Object> map=new HashMap<>();
+                map.put("post",post);
+                User user = userService.findUserById(post.getUserId());
+
+                map.put("user",user);
+
+                long likeCount = likeService.findEntityLikeCount(ENTITY_TYPE_POST, post.getId());
+                map.put("likeCount",likeCount);
+                discussPosts.add(map);
+            }
+        }
+
+        model.addAttribute("discussPosts",discussPosts);
+
+        return "index::postList";
+    }
+
+
+
+
 }

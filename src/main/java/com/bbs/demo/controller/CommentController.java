@@ -9,6 +9,7 @@ import com.bbs.demo.event.EventProducer;
 import com.bbs.demo.service.CommentService;
 import com.bbs.demo.service.DiscussPostService;
 import com.bbs.demo.util.CommunityConstant;
+import com.bbs.demo.util.EmoticonUtil;
 import com.bbs.demo.util.HostHolder;
 
 import com.bbs.demo.util.RedisKeyUtil;
@@ -44,10 +45,13 @@ public class CommentController implements CommunityConstant {
 
 
 
+
+
     //添加评论
     @LoginRequired
     @RequestMapping(value = "/add/{discussPostId}" ,method = RequestMethod.POST)
     public String addComment(@PathVariable("discussPostId") int discussPostId, Comment comment){
+
         comment.setUserId(hostHolder.getUser().getId());
         comment.setStatus(0);
         comment.setCreateTime(new Date());
@@ -78,6 +82,8 @@ public class CommentController implements CommunityConstant {
             String redisKey= RedisKeyUtil.getPostScoreKey();
             redisTemplate.opsForSet().add(redisKey,discussPostId);
         }
+
+
         return "redirect:/discuss/detail/"+discussPostId;
     }
 

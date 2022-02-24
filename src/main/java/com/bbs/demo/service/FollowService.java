@@ -73,7 +73,6 @@ public class FollowService implements CommunityConstant {
     public List<Map<String, Object>> findFollowees(int userId, int offset, int limit) {
         String followeeKey = RedisKeyUtil.getFolloweeKey(userId, ENTITY_TYPE_USER);
         Set<Integer> targetIds = redisTemplate.opsForZSet().reverseRange(followeeKey, offset, offset + limit - 1);
-
         if (targetIds == null) {
             return null;
         }

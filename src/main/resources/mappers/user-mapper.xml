@@ -7,7 +7,7 @@
 
 
     <sql id="insertFields">
-        username,password,salt,email,type,status,activation_code,header_url ,create_time createtime
+        username,password,salt,email,type,status,activation_code,header_url ,create_time
     </sql>
 
 
@@ -20,6 +20,12 @@
         select <include refid="selectFields"></include>
         from user
         where id = #{id}
+    </select>
+
+    <select id="selectExceptAdmin" resultType="User">
+        select id
+        from user
+        where type!=1
     </select>
 
 
@@ -38,7 +44,7 @@
 
     <insert id="insertUser" parameterType="User" keyProperty="id">
         insert into user (<include refid="insertFields"></include>)
-        values(#{username}, #{password}, #{salt}, #{email}, #{type}, #{status}, #{activationCode}, #{headerUrl}, #{createTime})
+        values(#{username}, #{password}, #{salt}, #{email}, #{type}, #{status}, #{activation_code}, #{header_url}, #{create_time})
     </insert>
 
     <update id="updateStatus">

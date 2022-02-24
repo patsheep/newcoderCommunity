@@ -3,6 +3,7 @@ package com.bbs.demo.service;
 import com.bbs.demo.dao.CommentMapper;
 import com.bbs.demo.entity.Comment;
 import com.bbs.demo.util.CommunityConstant;
+import com.bbs.demo.util.EmoticonUtil;
 import com.bbs.demo.util.SensitiveFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -21,6 +22,8 @@ public class CommentService implements CommunityConstant {
     private SensitiveFilter sensitiveFilter;
     @Autowired
     private DiscussPostService discussPostService;
+    @Autowired
+    private EmoticonUtil emotionUtil;
 
     public List<Comment> findCommentsByEntity(int entityType,int entityId,int offset,int limit){
         return commentMapper.selectCommentsByEntity(entityType,entityId,offset,limit);
@@ -38,6 +41,8 @@ public class CommentService implements CommunityConstant {
         //添加评论
         comment.setContent(HtmlUtils.htmlEscape(comment.getContent()));
         comment.setContent(sensitiveFilter.filter(comment.getContent()));
+        //转义图
+        comment.setContent(emotionUtil.translate(comment.getContent()));
         int rows=commentMapper.insertComment(comment);
 
         //更新帖子评论数量

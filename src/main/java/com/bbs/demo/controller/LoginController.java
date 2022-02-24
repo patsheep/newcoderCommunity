@@ -113,6 +113,7 @@ public class LoginController {
         response.addCookie(cookie);
         //存验证码
         String redisKey= RedisKeyUtil.getKaptchaKey(kaptchaOwner);
+
         redisTemplate.opsForValue().set(redisKey,text,60,TimeUnit.SECONDS);
 
         //图片输出给浏览器
@@ -130,6 +131,7 @@ public class LoginController {
                         Model model,  HttpServletResponse response,@CookieValue("kaptchaOwner") String kaptchaOwner) {
         // 检查验证码
        // String kaptcha = (String) session.getAttribute("kaptcha");
+        System.out.println(username+" "+password);
         String kaptcha=null;
         if(StringUtils.isNotBlank(kaptchaOwner)){
             String redisKey = RedisKeyUtil.getKaptchaKey(kaptchaOwner);
@@ -166,8 +168,29 @@ public class LoginController {
         return "redirect:/login";
     }
 
+    @RequestMapping(path = "/loginTest", method = RequestMethod.POST)
+    public String loginTest(String username,String password,Model model,HttpServletResponse response){
+        int expiredSeconds=3600;
+
+        Map<String, Object> map = userService.login(username, password, expiredSeconds);
+
+        if (map.containsKey("ticket")) {
+            Cookie cookie = new Cookie("ticket", map.get("ticket").toString());
+            cookie.setPath(contextPath);//浏览contextPath是cookie会持久保存 即访问哪些路径会带有这个cookie
+            cookie.setMaxAge(expiredSeconds);
+            response.addCookie(cookie);
+            return "redirect:/index";
+        } else {
+            model.addAttribute("usernameMsg", map.get("usernameMsg"));
+            model.addAttribute("passwordMsg", map.get("passwordMsg"));
+            return "site/login";
+        }
+
+    }
+
 
 
 
 
 }
+

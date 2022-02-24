@@ -72,13 +72,15 @@ public class UserService implements CommunityConstant {
         User u=userMapper.selectByName(user.getUsername());
         if(u!=null){
             map.put("usernameMsg","账号已经存在");
+
             return map;
         }
 
         //验证邮箱
+
         u=userMapper.selectByEmail(user.getEmail());
         if(u!=null){
-            map.put("mailMsg","邮箱已注册");
+            map.put("emailMsg","邮箱已注册");
             return map;
 
         }
@@ -90,14 +92,13 @@ public class UserService implements CommunityConstant {
         user.setActivationCode(CommunityUtil.generateUUID());
         user.setHeaderUrl(String.format("http://images.nowcoder.com/head/%dt.png",new Random().nextInt(1000)));
         userMapper.insertUser(user);
-
         //激活邮件
         Context context=new Context();
         context.setVariable("email",user.getEmail());
         //http://localhost:8888/demo/activation/101/code
         String url=domain+contextPath+"/activation/"+user.getId()+"/"+user.getActivationCode();
         context.setVariable("url",url);
-        String content=templateEngine.process("/mails/activation",context);
+        String content=templateEngine.process("mails/activation",context);
         mailClient.sendMail(user.getEmail(),"激活账号",content);
         return map;
     }
@@ -244,5 +245,9 @@ public class UserService implements CommunityConstant {
             }
         });
         return list;
+    }
+
+    public List<User> selectAllExceptAdmin(){
+        return userMapper.selectExceptAdmin();
     }
 }

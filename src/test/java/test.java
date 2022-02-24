@@ -9,6 +9,7 @@ import com.bbs.demo.dao.DiscussPostMapper;
 import com.bbs.demo.dao.UserMapper;
 import com.bbs.demo.dao.elasticsearch.DiscussPostRepository;
 import com.bbs.demo.entity.DiscussPost;
+import com.bbs.demo.entity.User;
 import com.bbs.demo.service.DiscussPostService;
 import com.bbs.demo.service.UserService;
 import com.bbs.demo.util.MailClient;
@@ -141,7 +142,7 @@ public class test {
         System.out.println(simpleDateFormat.format(new Date())+"!!!");
         discussPostMapper.selectDiscussPostsWithHighOffset(0,0,10,0);*/
         Date startTime=new Date();
-        List<DiscussPost> list = discussPostService.findDiscussPosts(0,mid,10,0);
+        //List<DiscussPost> list = discussPostService.findDiscussPosts(0,mid,10,0);
         Date edTime=new Date();
         long val1=edTime.getTime()-startTime.getTime();
        System.out.println("firstVersion:"+(edTime.getTime()-startTime.getTime()));
@@ -192,5 +193,13 @@ public class test {
         System.out.println(url.toString());
         // 关闭OSSClient。
         ossClient.shutdown();
+    }
+
+    @Test
+    public void testgetAll(){
+        List<User> res=userMapper.selectExceptAdmin();
+        for(User i:res){
+            System.out.println(i.getId());
+        }
     }
 }

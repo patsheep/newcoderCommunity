@@ -209,6 +209,34 @@ public class MessageController implements CommunityConstant {
             model.addAttribute("followNotice", messageVO);
         }
 
+        // 查询系统通知
+        List<Message> messageList=messageService.findNotices(user.getId(),TOPIC_NOTICE,0,5);//最近五条
+        if (messageList.size()>0) {
+
+            List<Integer> ids=new ArrayList<>();
+            List<Map<String,Object>> meslist=new ArrayList<>();
+            for(Message mes:messageList){
+                System.out.println("noticeMessage"+mes.getContent());
+                Map<String, Object> messageVO = new HashMap<>();
+                messageVO.put("createTime", mes.getCreateTime());
+                String content = HtmlUtils.htmlUnescape(mes.getContent());
+                Map<String, Object> data = JSONObject.parseObject(content, HashMap.class);
+
+                messageVO.put("content",data.get("notice"));
+                messageVO.put("noticeId",mes.getId());
+                ids.add(mes.getId());
+
+                int unread = mes.getStatus()^1;
+
+                messageVO.put("unread", unread);
+                meslist.add(messageVO);
+
+            }
+            messageService.readMessage(ids);
+            System.out.println(meslist.size());
+            model.addAttribute("NoticeList", meslist);
+        }
+
 
         // 查询未读消息数量
         int letterUnreadCount = messageService.findLetterUnreadCount(user.getId(), null);
@@ -257,6 +285,7 @@ public class MessageController implements CommunityConstant {
         }
         return "site/notice-detail";
     }
+
 
 
 }

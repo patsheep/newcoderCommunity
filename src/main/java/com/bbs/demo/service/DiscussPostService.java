@@ -2,6 +2,7 @@ package com.bbs.demo.service;
 
 import com.bbs.demo.dao.DiscussPostMapper;
 import com.bbs.demo.entity.DiscussPost;
+import com.bbs.demo.util.EmoticonUtil;
 import com.bbs.demo.util.SensitiveFilter;
 import com.github.benmanes.caffeine.cache.CacheLoader;
 import com.github.benmanes.caffeine.cache.Caffeine;
@@ -27,6 +28,8 @@ public class DiscussPostService {
     private DiscussPostMapper discussPostMapper;
     @Autowired
     private SensitiveFilter sensitiveFilter;
+    @Autowired
+    private EmoticonUtil emoticonUtil;
     @Value("${caffeine.posts.max-size}")
     private int maxSize;
     @Value("${caffeine.posts.expire-seconds}")
@@ -64,7 +67,8 @@ public class DiscussPostService {
                         // 二级缓存: Redis -> mysql
 
                         //logger.debug("load post list from DB.");
-                        return discussPostMapper.selectDiscussPosts(0, offset, limit, 0);
+                        System.out.println("load function");
+                        return discussPostMapper.selectDiscussPosts(0, offset, limit, 1);
                     }
                 });
         // 初始化帖子总数缓存
@@ -81,13 +85,26 @@ public class DiscussPostService {
                 });
     }
 
-    public List<DiscussPost> findDiscussPosts(int userId,int offset,int limit,int orderModel){
-        if(userId==0&&orderModel==0){
-
+    public void refreshCache(){
+        //清空缓存
+        postListCache.invalidateAll();
+        postRowsCache.invalidateAll();
+    }
+    public List<DiscussPost> findDiscussPosts(int userId,int offset,int limit,int orderModel,String tag){
+        System.out.println("tag="+tag);
+        if(userId==0&&orderModel==1){
+            List<DiscussPost> res=postListCache.get(offset+":"+limit);
             return postListCache.get(offset+":"+limit);
         }
-        System.out.println("0.0");
-        return discussPostMapper.selectDiscussPosts(userId,offset,limit,orderModel);
+        if(tag==null || tag.isEmpty()) {
+
+            return discussPostMapper.selectDiscussPosts(userId, offset, limit, orderModel);
+
+        }
+        else {
+
+            return discussPostMapper.selectDiscussPostsWithTag(userId,offset,limit,orderModel,tag);
+        }
     }
     public List<DiscussPost> findDiscussPostsWithHighOffset(int userId,int offset,int limit,int orderModel){
         return discussPostMapper.selectDiscussPostsWithHighOffset(userId,offset,limit,orderModel);
@@ -110,6 +127,10 @@ public class DiscussPostService {
         //过滤敏感词
         post.setTitle(sensitiveFilter.filter(post.getTitle()));
         post.setContent(sensitiveFilter.filter(post.getContent()));
+        //转表情包
+        post.setContent(emoticonUtil.translate(post.getContent()));
+        System.out.println("newContentis="+post.getContent());
+
         return discussPostMapper.insertDiscussPost(post);
     }
 

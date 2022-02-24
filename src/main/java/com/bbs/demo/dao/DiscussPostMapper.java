@@ -13,6 +13,8 @@ public interface DiscussPostMapper {
 
     List<DiscussPost> selectDiscussPostsWithHighOffset(@Param("userId")int userId,@Param("offset") int offset , @Param("limit") int limit, @Param("orderModel") int orderModel);
 
+    List<DiscussPost> selectDiscussPostsWithTag(@Param("userId")int userId,@Param("offset") int offset , @Param("limit") int limit, @Param("orderModel") int orderModel,@Param("tag") String tag);
+
     int selectDiscussPostRows(@Param("userId")int userId);
 
     int selectAll();
